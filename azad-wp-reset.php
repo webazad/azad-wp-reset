@@ -50,9 +50,9 @@ class Azad_WP_Reset{
 
         $wordpress_reset = (isset($_POST['wordpress_reset']) && 'true' == $_POST['wordpress_reset']);
         $wordpress_reset_confirm = (isset($_POST['wordpress_reset_confirm']) && 'reset' == $_POST['wordpress_reset_confirm']);
-        $valid_nonce = (isset($_POST['_wpnonce']) && wp_verify_nonce($_POST['wpnonce'],'wordpress_reset'));
+        $valid_nonce = (isset($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'],'wordpress_reset'));
 
-        if($wordpress_reset){
+        if($wordpress_reset && $wordpress_reset_confirm && $valid_nonce){
             require_once(ABSPATH . '/wp-admin/includes/upgrade.php');
             $blogname       = get_option('blogname');
             $admin_email    = get_option('admin_email');
@@ -73,17 +73,39 @@ class Azad_WP_Reset{
             foreach($tables as $table){
                 $wpdb->query("DROP TABLE $table");
             }
+
             $result = wp_install($blogname,$user->user_login,$user->user_email,$blog_public);
             extract($result,EXTR_SKIP);
 
             $query = $wpdb->prepare("UPDATE $wpdb->users SET user_pass = %s, user_activation_key = '' WHERE ID = %d", $user->user_pass, $user_id);
             $wpdb->query($query);
 
-            // $get_user_meta = function_exists('get_user_meta') ? 'get_user_meta': 'get_usermeta';
-            // $update_user_meta = function_exists('update_user_meta') ? 'update_user_meta': 'update_usermeta';
             
-            // wp_clear_auth_cookie();
-            // wp_set_auth_cookie($user_id);
+            $get_user_meta = function_exists('get_user_meta') ? 'get_user_meta': 'get_usermeta';
+            $update_user_meta = function_exists('update_user_meta') ? 'update_user_meta': 'update_usermeta';
+            
+            if($get_user_meta($user_id,'default_password_nag')){
+                $update_user_meta($user_id,'default_password_nag',false);
+            }
+            if($get_user_meta($user_id,$wpdb->prifix . 'default_password_nag')){
+                $update_user_meta($user_id,$wpdb->prifix . 'default_password_nag',false);
+            }
+
+            if(! defined('REACTIVATE_WP_RESET') && REACTIVATE_WP_RESET !== true){
+                activate_plugin(plugin_basename(__FILE__));
+            }
+
+            if(! empty($reactivate_wp_reset_additional)){
+                foreach($reactivate_wp_reset_additional as $plugin){
+                    $plugin = plugin_basename($plugin);
+                    if(! is_wp_error(validate_plugin($plugin))){
+                        activate_plugin($plugin);
+                    }
+                }
+            }
+
+            wp_clear_auth_cookie();
+            wp_set_auth_cookie($user_id);
 
             wp_redirect(admin_url() . '?reset');
             exit;
@@ -132,7 +154,7 @@ class Azad_WP_Reset{
                 esc_html__('Reset','azad-wp-reset'),
                 esc_html__('Reset','azad-wp-reset'),
                 'activate_plugins',
-                'azad-wp-reset',
+                'wordpress-reset',
                 array($this,'admin_page')
             );
             add_action("admin_print_scripts-{$hook}",array($this,'admin_js'));
@@ -181,6 +203,7 @@ class Azad_WP_Reset{
             <h3><?php esc_html_e('Reset','azad-wp-reset') ?></h3>
             <p><?php printf(esc_html__('Type %s in the confirmation field to confirm the reset and then click the reset button:','azad-wp-reset'),'<strong>reset</strong>'); ?></p>
             <form id="wordpress_reset_form" action="" method="post">
+                <?php wp_nonce_field('wordpress_reset'); ?>
                 <input id="wordpress_reset" name="wordpress_reset" type="hidden" value="true"/>
                 <input id="wordpress_reset_confirm" type="text" name="wordpress_reset_confirm" value="" />
                 <p class="submit">
