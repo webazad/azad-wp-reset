@@ -185,6 +185,7 @@ class Azad_WP_Reset{
             <h1><?php esc_html_e('Reset','azad-wp-reset'); ?></h1>
             <h2><?php esc_html_e('Details about the reset','azad-wp-reset'); ?></h2>
             <p><strong><?php esc_html_e('After completing this reset, you will be taken to the dashboard.','azad-wp-reset'); ?></strong></p>
+            
             <?php 
                 $user = $current_user; 
                 $admin = get_user_by('login','admin'); 
@@ -194,12 +195,37 @@ class Azad_WP_Reset{
             <?php else: ?>
                 <p><?php esc_html__('The "admin" user exist and will be recreated with its current password.','azad-wp-reset'); ?></p>
             <?php endif; ?>
+            
             <?php if($will_reactivate) : ?>
-                <p><?php printf(esc_html__('The asdf"admin" user does not exist. The user %s will be recreated using its current password with user level 10.','azad-wp-reset'),'<strong>'. esc_html($user->user_login) .'</strong>'); ?></p>
+                <p><?php printf(esc_html__('The "admin" user does not exist. The user %s will be recreated using its current password with user level 10.','azad-wp-reset'),'<strong>'. esc_html($user->user_login) .'</strong>'); ?></p>
             <?php else: ?>
                 <p><?php _e('This plugin <strong> will not be automatically reactivated</strong> after the reset.','azad-wp-reset'); ?></p>
                 <p><?php printf(esc_html__('To have this plugin auto-reactivated, add %1$s to your %2$s file.','azad-wp-reset'),'<span class="code"><code>define( \'REACTIVATE_WP_RESET\', true );</code></span>','<span class="code">wp-config.php</span>'); ?></p>
             <?php endif; ?>
+
+            <?php if(! empty($reactivate_wp_reset_additional)) : ?>
+                <?php esc_html_e('The following additional plugins will be reactivated:','azad-wp-reset'); ?>
+                <ul style="list-style-type:disc;">
+                    <?php _e('This plugin <strong> will not be automatically reactivated</strong> after the reset.','azad-wp-reset'); ?>
+                    <?php foreach($reactivate_wp_reset_additional as $plugin) : ?>
+                        <?php $plugin_data = get_plugin_data(WP_PLUGIN_DIR . '/' . $plugin); ?>
+                        <li style="margin:5px 0 0 30px;"><strong><?php esc_html($plugin_data['Name']); ?></strong></li>
+                    <?php endforeach; ?>
+                    <?php unset($reactivate_wp_reset_additional, $plugin,$plugin_data); ?>
+                </ul>
+            <?php endif; ?>
+
+            <?php if(! empty($missing)) : ?>
+                <?php esc_html_e('The following additional plugins are missing and can not be reactivated :','azad-wp-reset'); ?>
+                <ul style="list-style-type:disc;">
+                    <?php _e('This plugin <strong> will not be automatically reactivated</strong> after the reset.','azad-wp-reset'); ?>
+                    <?php foreach($missing as $plugin) : ?>
+                        <li style="margin:5px 0 0 30px;"><strong><?php esc_html($plugin); ?></strong></li>
+                    <?php endforeach; ?>
+                    <?php unset($missing, $plugin); ?>
+                </ul>
+            <?php endif; ?>
+
             <h3><?php esc_html_e('Reset','azad-wp-reset') ?></h3>
             <p><?php printf(esc_html__('Type %s in the confirmation field to confirm the reset and then click the reset button:','azad-wp-reset'),'<strong>reset</strong>'); ?></p>
             <form id="wordpress_reset_form" action="" method="post">
