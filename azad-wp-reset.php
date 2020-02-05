@@ -6,7 +6,7 @@ Plugin URI: gittechs.com/plugin/azad-duplicate-menu
 Author: Md. Abul Kalam Azad
 Author URI: gittechs.com/author
 Author Email: webdevazad@gmail.com
-Version: 0.0.0.1
+Version: 1.0.0
 License: GPL2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: azad-wp-reset
