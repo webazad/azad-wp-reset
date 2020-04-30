@@ -9,7 +9,7 @@ if(! class_exists('AWR_Activator')){
         public static $_instance = null;
 
         public function __construct(){
-            add_action( 'admin_init', array( 'AWR_Activator', 'awr_safe_welcome_redirect' ) );
+            add_action( 'admin_init', array( $this, 'awr_safe_welcome_redirect' ) );
         }
 
         public function awr_safe_welcome_redirect(){
